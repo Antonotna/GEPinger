@@ -9,20 +9,17 @@ Sender::Sender(QObject *parent) :
 
 void Sender::run()
 {
-
-
     int res;
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
-    float spkt, rpkt, diff, prvpkt=0;
+    long spkt, rpkt, diff, prvpkt=0;
     time_t send_time, rec_time;
 
     snd_iph->tlen = reverse_short(tlen-sizeof(eth_header));
     snd_iph->identification = reverse_short(snd_iph->identification);
 
     /*CRC for ip and icmp header*/
-    snd_iph->crc = cksum(snd_iph, sizeof(ip_header));
-    //qWarning("crc = %x", snd_iph->crc);
+    snd_iph->crc = cksum(snd_iph, sizeof(ip_header));    
     snd_icmph->crc = icmp_cksum((u_short *) snd_icmph, tlen - (sizeof(eth_header) + sizeof(ip_header)));    
 
 
@@ -48,7 +45,7 @@ void Sender::run()
             rec_icmp = (icmp_header *) (pkt_data + sizeof(eth_header) + sizeof(ip_header));
             if(rec_iph->identification == snd_iph->identification)
             {
-                spkt = header->ts.tv_usec;
+                spkt = (header->ts.tv_sec * 1000) + header->ts.tv_usec;
                 break;
             }
         }
@@ -70,13 +67,11 @@ void Sender::run()
                         continue;
             rec_ethh = (eth_header *) pkt_data;
             rec_iph = (ip_header *) (pkt_data + sizeof(eth_header));
-            rec_icmp = (icmp_header *) (pkt_data + sizeof(eth_header) + sizeof(ip_header));
-            //qWarning("!!! 1 pack eth type = %x", rec_ethh->type);
+            rec_icmp = (icmp_header *) (pkt_data + sizeof(eth_header) + sizeof(ip_header));            
             if(rec_iph->proto == 0x1 && rec_icmp->type == 0 && rec_icmp->sid == snd_icmph->sid && rec_icmp->sn == snd_icmph->sn)
             {
-                rpkt = header->ts.tv_usec;
-                diff = (rpkt-spkt)/1000;
-                //qWarning("I've recived packet for %f msec", diff);
+                rpkt = (header->ts.tv_sec * 1000) + header->ts.tv_usec;
+                diff = (rpkt-spkt)/1000;                
                 emit recPacket(diff, diff - prvpkt, false);
                 prvpkt = diff;
                 break;

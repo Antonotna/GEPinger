@@ -22,7 +22,7 @@ public:
     bool abort;
     
 signals:
-    void recPacket(float time, float jitter, bool timeout);
+    void recPacket(long time, long jitter, bool timeout);
     void endPing();
     
 public slots:

@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->ipAddr->setFocus();
     ui->datasize->setRange(60,1500);
     ui->datasize->setValue(64);
-    QObject::connect(snd,SIGNAL(recPacket(float, float, bool)),this, SLOT(rPacket(float, float, bool)));
+    QObject::connect(snd,SIGNAL(recPacket(long, long, bool)),this, SLOT(rPacket(long, long, bool)));
     QObject::connect(snd, SIGNAL(endPing()),this, SLOT(ePing()));
     QObject::connect(this, SIGNAL(ab()), snd, SLOT(abrt()));
 
@@ -24,13 +24,9 @@ MainWindow::~MainWindow()
 void MainWindow::on_click()
 {
 
-    //snd->mystart(10,&iphdr,&icmphdr);
     int ival, tmout;
     int ct = ui->count->text().toInt();
-    //QPushButton *clickedButton = qobject_cast<QPushButton *>(sender());
 
-
-    //ui->groupBox_3->setEnabled(false);
     if(ui->ping->text() == "Ping")
     {
         ui->Output->clear();
@@ -38,7 +34,7 @@ void MainWindow::on_click()
             return;
         ival = ui->inter->text().toInt();
         tmout = ui->timeout->text().toInt();
-        //snd->mystart(1,&ethhdr,&iphdr,&icmphdr);
+        num = 1;
         ui->groupBox->setEnabled(false);
         ui->groupBox_2->setEnabled(false);
         ui->groupBox_3->setEnabled(false);
@@ -71,9 +67,9 @@ int MainWindow::makepacket()
     iplist = ui->ipAddr->text().split(".");
 
 
-    pktsize = ui->datasize->value();
-    free(pkt);
-    pkt = (u_char *) malloc(pktsize);
+    pktsize = ui->datasize->value();    
+    if((pkt = (u_char *) malloc(pktsize)) == NULL)
+        return 1;
 
     ethhdr = (eth_header *) pkt;
     iphdr = (ip_header *) (pkt + sizeof(eth_header));
@@ -276,21 +272,28 @@ void MainWindow::testipandmac()
     }
 }
 
-void MainWindow::rPacket(float time, float jt, bool timeout)
+void MainWindow::rPacket(long time, long jt, bool timeout)
 {
     QString tout = "timeout";
-    QString tm = "Packet recived for " + QString::number(time) + "msec. Jitter: " + QString::number(jt);
+    QString tm = "Packet " + QString::number(num) +  " recived for " + QString::number(time) + " msec. Jitter: " + QString::number(jt);
     if(timeout)
         ui->Output->addItem(tout);
     else
         ui->Output->addItem(tm);
     ui->Output->scrollToBottom();
+    num++;
 }
 
 void MainWindow::ePing()
 {
+    free(pkt);
     ui->groupBox->setEnabled(true);
     ui->groupBox_2->setEnabled(true);
     ui->groupBox_3->setEnabled(true);
     ui->ping->setText("Ping");
+}
+
+void MainWindow::pause_click()
+{
+
 }

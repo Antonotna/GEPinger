@@ -25,7 +25,8 @@ public:
 
 public slots:
     void on_click();
-    void rPacket(float time, float jt, bool timeout);
+    void pause_click();
+    void rPacket(long time, long jt, bool timeout);
     void ePing(void);
 
 signals:
@@ -38,7 +39,7 @@ private:
     eth_header *ethhdr;
     ip_header *iphdr;
     icmp_header *icmphdr;
-    int pktsize;
+    int pktsize, num;
 
     int makepacket();
     int ctoi(char *str_ip, ip_address *ipadr);

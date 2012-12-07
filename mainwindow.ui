@@ -54,9 +54,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>270</y>
+      <y>170</y>
       <width>401</width>
-      <height>111</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="title">
@@ -126,9 +126,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>390</y>
+      <y>260</y>
       <width>401</width>
-      <height>101</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="title">
@@ -193,7 +193,7 @@
       <x>10</x>
       <y>50</y>
       <width>401</width>
-      <height>201</height>
+      <height>101</height>
      </rect>
     </property>
     <property name="title">
@@ -324,6 +324,19 @@
      </rect>
     </property>
    </widget>
+   <widget class="QPushButton" name="pause">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>530</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Pause</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
@@ -361,8 +374,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pause</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>pause_click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>172</x>
+     <y>536</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>251</x>
+     <y>460</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>on_click()</slot>
+  <slot>pause_click()</slot>
  </slots>
 </ui>
