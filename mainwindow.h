@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "sender.h"
 #include "StructPacket.h"
+#include "mylistwidget.h"
 
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))

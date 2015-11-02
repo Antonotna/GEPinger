@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Mon 2. Nov 21:19:46 2015
+** Created: Tue 3. Nov 00:10:51 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -20,12 +20,12 @@
 #include <QtGui/QHeaderView>
 #include <QtGui/QLabel>
 #include <QtGui/QLineEdit>
-#include <QtGui/QListWidget>
 #include <QtGui/QMainWindow>
 #include <QtGui/QPushButton>
 #include <QtGui/QRadioButton>
 #include <QtGui/QSpinBox>
 #include <QtGui/QWidget>
+#include <mylistwidget.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,7 +60,7 @@ public:
     QLabel *label_7;
     QSpinBox *datasize;
     QLabel *label_11;
-    QListWidget *Output;
+    MyListWidget *Output;
     QPushButton *pause;
 
     void setupUi(QMainWindow *MainWindow)
@@ -159,10 +159,10 @@ public:
         label_11 = new QLabel(groupBox_3);
         label_11->setObjectName(QString::fromUtf8("label_11"));
         label_11->setGeometry(QRect(10, 60, 46, 21));
-        Output = new QListWidget(centralWidget);
+        Output = new MyListWidget(centralWidget);
         Output->setObjectName(QString::fromUtf8("Output"));
         Output->setGeometry(QRect(430, 10, 391, 541));
-        Output->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        Output->setSelectionMode(QAbstractItemView::MultiSelection);
         Output->setSelectionBehavior(QAbstractItemView::SelectItems);
         pause = new QPushButton(centralWidget);
         pause->setObjectName(QString::fromUtf8("pause"));

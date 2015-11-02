@@ -13,11 +13,13 @@ RC_FILE = addIcon.rc
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    sender.cpp
+    sender.cpp \
+    mylistwidget.cpp
 
 HEADERS  += mainwindow.h \
     sender.h \
-    StructPacket.h
+    StructPacket.h \
+    mylistwidget.h
 
 FORMS    += mainwindow.ui
 

@@ -479,7 +479,7 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </widget>
-   <widget class="QListWidget" name="Output">
+   <widget class="MyListWidget" name="Output">
     <property name="geometry">
      <rect>
       <x>430</x>
@@ -489,7 +489,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="selectionMode">
-     <enum>QAbstractItemView::ExtendedSelection</enum>
+     <enum>QAbstractItemView::MultiSelection</enum>
     </property>
     <property name="selectionBehavior">
      <enum>QAbstractItemView::SelectItems</enum>
@@ -511,6 +511,13 @@ p, li { white-space: pre-wrap; }
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>MyListWidget</class>
+   <extends>QListWidget</extends>
+   <header location="global">mylistwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>ipAddr</tabstop>
   <tabstop>count</tabstop>
