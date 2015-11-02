@@ -304,7 +304,11 @@ void MainWindow::testipandmac()
 void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code)
 {
     QString tout = "timeout";
-    QString tm = "Packet " + QString::number(num) +  " recived for " + QString::number(time) + " msec. Jitter: " + QString::number(jt) + " msec";
+    QString tm = "Packet " + QString::number(num) + \
+            " recived for " + QString::number(time) + \
+            " msec. Jitter: " + QString::number(jt) + \
+            " msec. Tos = " + \
+            QString::number(code);
 
     num++;
     if(type == 3)

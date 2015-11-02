@@ -14,12 +14,13 @@ class MyListWidget : public QListWidget
     Q_OBJECT
 public:
     explicit MyListWidget(QWidget *parent = 0);
-    //void keyPressEvent(QKeyEvent *event);
 
 protected:
     void keyPressEvent(QKeyEvent *event);
     void mousePressEvent(QMouseEvent *event);
-    //bool event(QEvent *e);
+
+private:
+    void copyToClipboard();
     
 signals:
     

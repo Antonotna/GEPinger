@@ -9,10 +9,10 @@ Sender::Sender(QObject *parent) :
 
 void Sender::run()
 {
-    int res;
+    int res, loop;
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
-    long spkt, rpkt, diff, prvpkt=0, sspkt, uspkt;
+    long spkt, diff, prvpkt=0, sspkt, uspkt;
     time_t send_time, rec_time;
 
     snd_iph->tlen = reverse_short(tlen-sizeof(eth_header));
@@ -24,7 +24,13 @@ void Sender::run()
 
 
     /*to do infinity loop*/
-    for(i=0;i<scnt;i++)
+    if(scnt == 0)
+    {
+        loop = 0;
+        scnt = 1;
+    }
+    else loop = 1;
+    for(i=0;i<scnt;i += loop)
     {
         if(pause)
         {
@@ -81,7 +87,7 @@ void Sender::run()
             if(rec_iph->proto == 0x1 && rec_icmp->type == 0 && rec_icmp->sid == snd_icmph->sid && rec_icmp->sn == snd_icmph->sn)
             {
                 diff = ((header->ts.tv_sec - sspkt) * 1000) + ((header->ts.tv_usec - uspkt)/1000);
-                emit recPacket(diff, qFabs(diff - prvpkt), false, 0, 0);
+                emit recPacket(diff, qFabs(diff - prvpkt), false, 0, rec_iph->tos);
                 prvpkt = diff;
                 break;
             }            

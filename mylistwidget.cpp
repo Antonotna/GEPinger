@@ -11,33 +11,29 @@ MyListWidget::MyListWidget(QWidget *parent) :
 void MyListWidget::keyPressEvent(QKeyEvent *event)
 {
     if(event->matches(QKeySequence::Copy))
-    {
-        QStringList strings;
-        QList<QListWidgetItem*> items;
-        items = selectedItems();
-        for(int i=0; i < items.size(); ++i)
-        {
-            strings << items.at(i)->text();
-            items.at(i)->setSelected(false);
-        }
-        QApplication::clipboard()->setText(strings.join("\n"));
-
-
-    }
+        copyToClipboard();
 }
 
 void MyListWidget::mousePressEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::RightButton)
     {
-        QList<QListWidgetItem*> items;
-        items = selectedItems();
-        for(int i=0; i < items.size(); ++i)
-        {
-            items.at(i)->setSelected(false);
-        }
+        copyToClipboard();
 
     }else{
         QListWidget::mousePressEvent(event);
     }
+}
+
+void MyListWidget::copyToClipboard()
+{
+    QStringList strings;
+    QList<QListWidgetItem*> items;
+    items = selectedItems();
+    for(int i=0; i < items.size(); ++i)
+    {
+        strings << items.at(i)->text();
+        items.at(i)->setSelected(false);
+    }
+    QApplication::clipboard()->setText(strings.join("\n"));
 }
