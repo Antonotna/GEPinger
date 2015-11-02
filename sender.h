@@ -2,6 +2,9 @@
 #define SENDER_H
 
 #include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
+#include <qmath.h>
 #define HAVE_REMOTE
 #include <pcap.h>
 //#include "reciver.h"
@@ -15,14 +18,14 @@ public:
     explicit Sender(QObject *parent = 0);
     void run();
     //void mystart(int cnt,eth_header *ethh, ip_header *iph, icmp_header *icmph);
-    void mystart(int cnt, u_char *packet, int len, int tmout, int ival);
+    void mystart(int cnt, u_char *packet, int len, int tmout, int ival, QWaitCondition *wait, QMutex *mutex);
     unsigned short cksum(ip_header *ip, int len);
     u_short icmp_cksum(u_short *icmp, int len);
     u_short reverse_short(u_short i);
-    bool abort;
+    bool abort, pause;
     
 signals:
-    void recPacket(long time, long jitter, bool timeout);
+    void recPacket(long time, long jitter, bool timeout, int type, int code);
     void endPing();
     
 public slots:
@@ -38,6 +41,8 @@ private:
     eth_header *snd_ethh, *rec_ethh;
     ip_header *snd_iph, *rec_iph;
     icmp_header *snd_icmph, *rec_icmp;
+    QMutex *snd_mutex;
+    QWaitCondition *snd_wait;
 
 };
 

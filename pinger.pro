@@ -9,6 +9,7 @@ QT       += core gui
 TARGET = pinger
 TEMPLATE = app
 
+RC_FILE = addIcon.rc
 
 SOURCES += main.cpp\
         mainwindow.cpp \

@@ -9,8 +9,17 @@ MainWindow::MainWindow(QWidget *parent) :
     snd = new Sender;
     ui->ipAddr->setFocus();
     ui->datasize->setRange(60,1500);
-    ui->datasize->setValue(64);
-    QObject::connect(snd,SIGNAL(recPacket(long, long, bool)),this, SLOT(rPacket(long, long, bool)));
+    ui->datasize->setValue(100);
+    ui->pause->setEnabled(false);
+    ui->tos_dscp->setChecked(true);
+    ui->Output->setUniformItemSizes(true);
+    ECN = 4; //Explicit Congestion Notification
+    dscpList[0]=46*ECN; dscpList[1] = 0;
+    for(int i=0;i<=17;i++){
+        dscpList[i+2] = (i*2+8)*ECN;
+    }
+    dscpList[19] = 48*ECN; dscpList[20] = 56*ECN;
+    QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int)),this, SLOT(rPacket(long, long, bool, int, int)));
     QObject::connect(snd, SIGNAL(endPing()),this, SLOT(ePing()));
     QObject::connect(this, SIGNAL(ab()), snd, SLOT(abrt()));
 
@@ -38,10 +47,20 @@ void MainWindow::on_click()
         ui->groupBox->setEnabled(false);
         ui->groupBox_2->setEnabled(false);
         ui->groupBox_3->setEnabled(false);
+        ui->pause->setEnabled(true);
         ui->ping->setText("Stop");
-        snd->mystart(ct,pkt,pktsize,tmout,ival);
+        snd->mystart(ct,pkt,pktsize,tmout,ival,&wait,&mutex);
     } else {
-        emit ab();
+        if(snd->pause)
+        {
+            snd->pause = false;
+            ui->pause->setText("Pause ||");
+            snd->abort = true;
+            wait.wakeAll();
+        }else{
+            snd->abort = true;
+        }
+        //emit ab();
     }
 }
 
@@ -119,7 +138,7 @@ int MainWindow::makepacket()
         pAdapterInfo = (IP_ADAPTER_INFO *) MALLOC(ulOutBufLen);
     }
 
-    if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {
+    if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {        
         while (pAdapterInfo) {
             if(pAdapterInfo->Index == pMib.dwForwardIfIndex)
             {
@@ -133,6 +152,9 @@ int MainWindow::makepacket()
             pAdapterInfo = pAdapterInfo->Next;
         }
     }
+
+    if(pAdapterInfo == NULL)
+        return 1;
 
     sadr = inet_addr(pAdapterInfo->IpAddressList.IpAddress.String);
 
@@ -166,10 +188,17 @@ int MainWindow::makepacket()
 
     ethhdr->type = 0x8;
 
-    if(!(ui->ipTos->text().isEmpty()))    
-        iphdr->tos = ui->ipTos->text().toInt();
-    else
-        iphdr->tos = 0;
+    if(ui->tos_dscp->isChecked())
+    {
+        iphdr->tos = dscpList[ui->dscpBox->currentIndex()];
+
+    }else
+    {
+        if(!(ui->ipTos->text().isEmpty()))
+            iphdr->tos = ui->ipTos->text().toInt();
+        else
+            iphdr->tos = 0;
+    }
 
     iphdr->ver_ihl = 0x45;
     iphdr->proto = 0x1;
@@ -272,16 +301,39 @@ void MainWindow::testipandmac()
     }
 }
 
-void MainWindow::rPacket(long time, long jt, bool timeout)
+void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code)
 {
     QString tout = "timeout";
-    QString tm = "Packet " + QString::number(num) +  " recived for " + QString::number(time) + " msec. Jitter: " + QString::number(jt);
+    QString tm = "Packet " + QString::number(num) +  " recived for " + QString::number(time) + " msec. Jitter: " + QString::number(jt) + " msec";
+
+    num++;
+    if(type == 3)
+    {
+        switch(code)
+        {       
+            case 1:
+                ui->Output->addItem("Host Unreachable");
+                break;
+            case 2:
+                ui->Output->addItem("Protocol Unreachable");
+                break;
+            case 3:
+                ui->Output->addItem("Port Unreachable");
+                break;
+            case 4:
+                ui->Output->addItem("Fragmentation Needed and Don't Fragment was Set");
+                break;
+            default:
+                ui->Output->addItem("Destination unreacheble");
+                break;
+        }
+        return;
+    }
     if(timeout)
         ui->Output->addItem(tout);
     else
         ui->Output->addItem(tm);
-    ui->Output->scrollToBottom();
-    num++;
+    ui->Output->scrollToBottom();    
 }
 
 void MainWindow::ePing()
@@ -290,10 +342,30 @@ void MainWindow::ePing()
     ui->groupBox->setEnabled(true);
     ui->groupBox_2->setEnabled(true);
     ui->groupBox_3->setEnabled(true);
+    ui->pause->setEnabled(false);
+    ui->pause->setText("Pause ||");
     ui->ping->setText("Ping");
 }
 
 void MainWindow::pause_click()
 {
-
+    if(ui->pause->text() == "Pause ||")
+    {
+        snd->pause = true;
+        ui->pause->setText("Pause >");
+    } else {
+        snd->pause = false;
+        wait.wakeAll();
+        ui->pause->setText("Pause ||");
+    }
 }
+
+void MainWindow::radio_chg(bool chg)
+{
+    //qWarning("%d",chg);
+    ui->dscpBox->setEnabled(chg);
+    ui->ipTos->setEnabled(!chg);
+
+    return;
+}
+

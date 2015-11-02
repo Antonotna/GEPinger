@@ -4,7 +4,7 @@
 Sender::Sender(QObject *parent) :
     QThread(parent)
 {
-    abort = false;
+    abort = pause = false;
 }
 
 void Sender::run()
@@ -12,7 +12,7 @@ void Sender::run()
     int res;
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
-    long spkt, rpkt, diff, prvpkt=0;
+    long spkt, rpkt, diff, prvpkt=0, sspkt, uspkt;
     time_t send_time, rec_time;
 
     snd_iph->tlen = reverse_short(tlen-sizeof(eth_header));
@@ -26,6 +26,13 @@ void Sender::run()
     /*to do infinity loop*/
     for(i=0;i<scnt;i++)
     {
+        if(pause)
+        {
+            snd_mutex->lock();
+               snd_wait->wait(snd_mutex);
+            snd_mutex->unlock();
+        }
+
         if(abort)
             break;
 
@@ -46,6 +53,9 @@ void Sender::run()
             if(rec_iph->identification == snd_iph->identification)
             {
                 spkt = (header->ts.tv_sec * 1000) + header->ts.tv_usec;
+                sspkt = header->ts.tv_sec;
+                uspkt = header->ts.tv_usec;
+                //qWarning("rec pkt sec = %u, usec = %u   ", header->ts.tv_sec, header->ts.tv_usec);
                 break;
             }
         }
@@ -57,7 +67,7 @@ void Sender::run()
             time(&rec_time);
             if((rec_time - send_time) > stmout)
             {
-                emit recPacket(0, 0, true);
+                emit recPacket(0, 0, true, 0, 0);
                 prvpkt = 0;
                 break;
             }
@@ -70,11 +80,21 @@ void Sender::run()
             rec_icmp = (icmp_header *) (pkt_data + sizeof(eth_header) + sizeof(ip_header));            
             if(rec_iph->proto == 0x1 && rec_icmp->type == 0 && rec_icmp->sid == snd_icmph->sid && rec_icmp->sn == snd_icmph->sn)
             {
-                rpkt = (header->ts.tv_sec * 1000) + header->ts.tv_usec;
-                diff = (rpkt-spkt)/1000;                
-                emit recPacket(diff, diff - prvpkt, false);
+                diff = ((header->ts.tv_sec - sspkt) * 1000) + ((header->ts.tv_usec - uspkt)/1000);
+                emit recPacket(diff, qFabs(diff - prvpkt), false, 0, 0);
                 prvpkt = diff;
                 break;
+            }            
+            //qWarning("!!!!!");
+            if(rec_iph->proto == 0x1 && rec_icmp->type == 0x3)
+            {
+                qWarning("id = %i id = %i", (((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47), snd_iph->identification);
+                if((((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47) == reverse_short(snd_iph->identification))
+                {
+                    emit recPacket(diff, diff - prvpkt, false, 3, rec_icmp->code);
+                    qWarning("yes");
+                    break;
+                }
             }
         }
         snd_iph->identification = reverse_short(snd_iph->identification);
@@ -99,12 +119,17 @@ void Sender::run()
 
 }
 
-void Sender::mystart(int cnt, u_char *packet, int len, int tmout, int ival)
+void Sender::mystart(int cnt, u_char *packet, int len, int tmout, int ival, QWaitCondition *wait, QMutex *mutex)
 {
+
+    struct bpf_program fcode;
+
     stmout = tmout;
     sival = ival;
     scnt = cnt;
     tlen = len;
+    snd_mutex = mutex;
+    snd_wait = wait;
     snd_ethh = (eth_header *) packet;
     snd_iph = (ip_header *) (packet + sizeof(eth_header));
     snd_icmph = (icmp_header *) (packet + sizeof(eth_header) + sizeof(ip_header));
@@ -139,6 +164,23 @@ void Sender::mystart(int cnt, u_char *packet, int len, int tmout, int ival)
                     if((frecv = pcap_open(d->name, 65536, PCAP_OPENFLAG_NOCAPTURE_LOCAL, sival, NULL, errbuf)) == NULL)
                     {
                         qWarning("!!return!!");
+                        return;
+                    }
+
+                    if (pcap_compile(frecv, &fcode, "icmp", 1, 0) <0 )
+                    {
+                        qWarning("\nUnable to compile the packet filter. Check the syntax.\n");
+                        /* Free the device list */
+                        pcap_freealldevs(alldevs);
+                        return;
+                    }
+
+                    //set the filter
+                    if (pcap_setfilter(frecv, &fcode)<0)
+                    {
+                        qWarning("\nError setting the filter.\n");
+                        /* Free the device list */
+                        pcap_freealldevs(alldevs);
                         return;
                     }
 
