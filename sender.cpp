@@ -23,7 +23,7 @@ void Sender::run()
     snd_icmph->crc = icmp_cksum((u_short *) snd_icmph, tlen - (sizeof(eth_header) + sizeof(ip_header)));    
 
 
-    /*to do infinity loop*/
+    /*to do infinity loop. Probably it's stupid solution. But who cares?*/
     if(scnt == 0)
     {
         loop = 0;
@@ -89,6 +89,7 @@ void Sender::run()
                 diff = ((header->ts.tv_sec - sspkt) * 1000) + ((header->ts.tv_usec - uspkt)/1000);
                 emit recPacket(diff, qFabs(diff - prvpkt), false, 0, rec_iph->tos);
                 prvpkt = diff;
+                Sleep(sival);
                 break;
             }            
             //qWarning("!!!!!");
@@ -98,7 +99,8 @@ void Sender::run()
                 if((((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47) == reverse_short(snd_iph->identification))
                 {
                     emit recPacket(diff, diff - prvpkt, false, 3, rec_icmp->code);
-                    qWarning("yes");
+                    //qWarning("yes");
+                    Sleep(sival);
                     break;
                 }
             }
@@ -167,7 +169,7 @@ void Sender::mystart(int cnt, u_char *packet, int len, int tmout, int ival, QWai
                     }
 
 
-                    if((frecv = pcap_open(d->name, 65536, PCAP_OPENFLAG_NOCAPTURE_LOCAL, sival, NULL, errbuf)) == NULL)
+                    if((frecv = pcap_open(d->name, 65536, PCAP_OPENFLAG_NOCAPTURE_LOCAL, 1, NULL, errbuf)) == NULL)
                     {
                         qWarning("!!return!!");
                         return;
