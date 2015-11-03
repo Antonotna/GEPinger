@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Tue 3. Nov 00:28:10 2015
+** Created: Tue 3. Nov 23:26:51 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -238,9 +238,9 @@ public:
         label_3->setText(QApplication::translate("MainWindow", "Count", 0, QApplication::UnicodeUTF8));
         count->setText(QApplication::translate("MainWindow", "10", 0, QApplication::UnicodeUTF8));
         label_4->setText(QApplication::translate("MainWindow", "Timeout", 0, QApplication::UnicodeUTF8));
-        timeout->setText(QApplication::translate("MainWindow", "1", 0, QApplication::UnicodeUTF8));
+        timeout->setText(QApplication::translate("MainWindow", "3", 0, QApplication::UnicodeUTF8));
         label_5->setText(QApplication::translate("MainWindow", "inter", 0, QApplication::UnicodeUTF8));
-        inter->setText(QApplication::translate("MainWindow", "10", 0, QApplication::UnicodeUTF8));
+        inter->setText(QApplication::translate("MainWindow", "0", 0, QApplication::UnicodeUTF8));
         label_7->setText(QApplication::translate("MainWindow", "ms", 0, QApplication::UnicodeUTF8));
         label_11->setText(QApplication::translate("MainWindow", "Datasize", 0, QApplication::UnicodeUTF8));
         pause->setText(QApplication::translate("MainWindow", "Pause ||", 0, QApplication::UnicodeUTF8));
