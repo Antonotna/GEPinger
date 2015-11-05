@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
         dscpList[i+2] = (i*2+8)*ECN;
     }
     dscpList[19] = 48*ECN; dscpList[20] = 56*ECN;
-    QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int)),this, SLOT(rPacket(long, long, bool, int, int)));
+    QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int, int, char, short)),this, SLOT(rPacket(long, long, bool, int, int, int, char, short)));
     QObject::connect(snd, SIGNAL(endPing()),this, SLOT(ePing()));
     QObject::connect(this, SIGNAL(ab()), snd, SLOT(abrt()));
 
@@ -42,8 +42,7 @@ void MainWindow::on_click()
         if(makepacket())
             return;
         ival = ui->inter->text().toInt();
-        tmout = ui->timeout->text().toInt();
-        num = 1;
+        tmout = ui->timeout->text().toInt();        
         ui->groupBox->setEnabled(false);
         ui->groupBox_2->setEnabled(false);
         ui->groupBox_3->setEnabled(false);
@@ -67,26 +66,40 @@ void MainWindow::on_click()
 int MainWindow::makepacket()
 {
     MIB_IPFORWARDROW pMib;
-    PIP_ADAPTER_INFO pAdapterInfo;
-    QStringList iplist;
-    DWORD netip = 0, dwRetVal = 0, dst;
-    QString strIp;
-    char *char_ip, *destination_ip;
-    u_int i;
-    int j;
-    bool eq;
+    PIP_ADAPTER_INFO pAdapterInfo;    
+    DWORD dwRetVal, dwError;
+    QString hoststr;
+    u_long host;
+    char *destination_ip;    
     QByteArray asc;
-    IPAddr dadr=0, sadr;
+    u_long best_route, sadr;
     ULONG mac[2], size = 6;
-    BYTE *pbyte;
-    u_char *tmpip1, *tmpip2;
+    BYTE *pbyte;    
 
-    if(ui->ipAddr->text().isEmpty())
+
+    hoststr = ui->ipAddr->text();
+
+    asc = hoststr.toAscii();
+    destination_ip  = asc.data();
+
+    if(hoststr.isEmpty())
         return 1;
-    iplist = ui->ipAddr->text().split(".");
+
+    /*Getting ip address*/
+    WSAStartup(MAKEWORD(2,2),&wsaData);
+    hostip = gethostbyname(destination_ip);
+    if(hostip == NULL)
+    {
+        dwError = WSAGetLastError();
+        return 1;
+    }else{
+        host = *(u_long *) hostip->h_addr_list[0];
+        in_addr_struct.S_un.S_addr = host;
+        destination_ip  = inet_ntoa(in_addr_struct);
+    }
 
 
-    pktsize = ui->datasize->value();    
+    pktsize = ui->datasize->value();
     if((pkt = (u_char *) malloc(pktsize)) == NULL)
         return 1;
 
@@ -94,38 +107,20 @@ int MainWindow::makepacket()
     iphdr = (ip_header *) (pkt + sizeof(eth_header));
     icmphdr = (icmp_header *) (pkt + sizeof(eth_header) + sizeof(ip_header));
 
-    /*filling data*/
-    for((j=sizeof(eth_header) + sizeof(ip_header) + sizeof(icmp_header));j < pktsize;j++)
-        pkt[j] = 0;
-
+    /*filling data(zero)*/
+    for(int i=sizeof(eth_header) + sizeof(ip_header) + sizeof(icmp_header);i < pktsize;i++)
+        pkt[i] = 0;
 
     /*Destination ip building*/
-    asc = ui->ipAddr->text().toAscii();
-    destination_ip = char_ip = asc.data();
-    ctoi(char_ip,&(iphdr->daddr));
+    ctoi(destination_ip,&(iphdr->daddr));
 
-
-    netip = (iplist.at(3).toInt() << 24) | netip;
-    netip = (iplist.at(2).toInt() << 16) | netip;
-    netip = (iplist.at(1).toInt() << 8 ) | netip;
-    netip = iplist.at(0).toInt() | netip;
 
     /*Getting ip of best route*/
-    GetBestRoute(netip, 0, &pMib);
-    dst=pMib.dwForwardNextHop;
-
-    strIp = QString::number(dst & 0xff);
-    strIp += ".";
-    strIp += QString::number((dst >> 8) & 0xff);
-    strIp += ".";
-    strIp += QString::number((dst >> 16) & 0xff);
-    strIp += ".";
-    strIp += QString::number(dst >> 24);
-    asc = strIp.toAscii();
-    char_ip = asc.data();
-    dadr = inet_addr(char_ip);
+    GetBestRoute(host, 0, &pMib);
+    best_route = (u_long) pMib.dwForwardNextHop;
 
 
+    /*Source ip and source mac building*/
     ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
     pAdapterInfo = (IP_ADAPTER_INFO *) MALLOC(sizeof (IP_ADAPTER_INFO));
     if (pAdapterInfo == NULL) {
@@ -141,8 +136,7 @@ int MainWindow::makepacket()
     if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) == NO_ERROR) {        
         while (pAdapterInfo) {
             if(pAdapterInfo->Index == pMib.dwForwardIfIndex)
-            {
-                /*Source ip and source mac building*/
+            {               
                 if(ctoi(pAdapterInfo->IpAddressList.IpAddress.String,&(iphdr->saddr)) != 0)
                     return 1;                
                 adrtopack(pAdapterInfo->Address,pAdapterInfo->AddressLength,ethhdr, true);
@@ -156,28 +150,14 @@ int MainWindow::makepacket()
     if(pAdapterInfo == NULL)
         return 1;
 
+    /*If pinged and pinging hosts belong same network best route ip address == ip_src address*/
     sadr = inet_addr(pAdapterInfo->IpAddressList.IpAddress.String);
+    if(best_route == sadr)
+        best_route = host;
 
-    tmpip1 = (u_char *) &dadr;
-    tmpip2 = (u_char *) &sadr;
-    eq = true;
-
-    for(i=0;i<sizeof(IPAddr);i++)
-    {
-        if(tmpip1[i] != tmpip2[i])
-        {
-            eq = false;
-            break;
-        }
-    }
-
-    if(eq)
-    {
-        dadr = inet_addr(destination_ip);
-    }
 
     /*Destination mac building*/
-    SendARP(dadr,NULL,mac,&size);
+    SendARP(best_route,NULL,mac,&size);
     pbyte = (BYTE *) mac;
     adrtopack(pbyte, 6, ethhdr, false);
 
@@ -301,16 +281,16 @@ void MainWindow::testipandmac()
     }
 }
 
-void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code)
+void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, int len, char ttl, short sn)
 {
     QString tout = "timeout";
-    QString tm = "Packet " + QString::number(num) + \
-            " recived for " + QString::number(time) + \
-            " msec. Jitter: " + QString::number(jt) + \
-            " msec. Tos = " + \
-            QString::number(code);
+    QString tm = QString::number((u_int) len) + \
+            " bytes. icmp_seq=" + QString::number((u_short) sn) + \
+            " ttl=" + QString::number((u_char) ttl) + \
+            " time=" + QString::number((u_long) time) +
+            "ms jitter=" + QString::number((u_long) jt) + \
+            " tos=" + QString::number((u_int) code);
 
-    num++;
     if(type == 3)
     {
         switch(code)
@@ -371,5 +351,26 @@ void MainWindow::radio_chg(bool chg)
     ui->ipTos->setEnabled(!chg);
 
     return;
+}
+
+bool MainWindow::isIP(QString * host)
+{
+    QStringList ipList;
+    bool ok;
+    u_long bt;
+
+
+    ipList = host->split(".");
+    for(int i = 0; i<ipList.size(); ++i)
+    {
+        bt = ipList.at(i).toInt(&ok);        
+        if(ok && bt < 255)
+            continue;
+
+        return false;
+    }
+
+    return true;
+
 }
 

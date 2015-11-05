@@ -12,7 +12,7 @@ void Sender::run()
     int res, loop;
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
-    long spkt, diff, prvpkt=0, sspkt, uspkt;
+    long spkt, diff = 0, prvpkt=0, sspkt = 0, uspkt = 0;
     time_t send_time, rec_time;
 
     snd_iph->tlen = reverse_short(tlen-sizeof(eth_header));
@@ -60,7 +60,7 @@ void Sender::run()
             {
                 spkt = (header->ts.tv_sec * 1000) + header->ts.tv_usec;
                 sspkt = header->ts.tv_sec;
-                uspkt = header->ts.tv_usec;
+                uspkt = header->ts.tv_usec;                
                 //qWarning("rec pkt sec = %u, usec = %u   ", header->ts.tv_sec, header->ts.tv_usec);
                 break;
             }
@@ -73,7 +73,7 @@ void Sender::run()
             time(&rec_time);
             if((rec_time - send_time) > stmout)
             {
-                emit recPacket(0, 0, true, 0, 0);
+                emit recPacket(0, 0, true, 0, 0, 0, 0, 0);
                 prvpkt = 0;
                 break;
             }
@@ -87,7 +87,7 @@ void Sender::run()
             if(rec_iph->proto == 0x1 && rec_icmp->type == 0 && rec_icmp->sid == snd_icmph->sid && rec_icmp->sn == snd_icmph->sn)
             {
                 diff = ((header->ts.tv_sec - sspkt) * 1000) + ((header->ts.tv_usec - uspkt)/1000);
-                emit recPacket(diff, qFabs(diff - prvpkt), false, 0, rec_iph->tos);
+                emit recPacket(diff, qFabs(diff - prvpkt), false, 0, rec_iph->tos, header->len, rec_iph->ttl, rec_icmp->sn);
                 prvpkt = diff;
                 Sleep(sival);
                 break;
@@ -96,9 +96,9 @@ void Sender::run()
             if(rec_iph->proto == 0x1 && rec_icmp->type == 0x3)
             {
                 qWarning("id = %i id = %i", (((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47), snd_iph->identification);
-                if((((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47) == reverse_short(snd_iph->identification))
+                if(((((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47)) == reverse_short(snd_iph->identification))
                 {
-                    emit recPacket(diff, diff - prvpkt, false, 3, rec_icmp->code);
+                    emit recPacket(diff, diff - prvpkt, false, 3, rec_icmp->code, 0, 0, 0);
                     //qWarning("yes");
                     Sleep(sival);
                     break;

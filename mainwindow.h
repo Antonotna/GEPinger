@@ -33,8 +33,8 @@ public slots:
     void on_click();
     void pause_click();
     void radio_chg(bool chg);
-    void rPacket(long time, long jt, bool timeout, int type, int code);
-    void ePing(void);
+    void rPacket(long time, long jt, bool timeout, int type, int code, int len, char ttl, short sn);
+    void ePing();
 
 signals:
     void ab();
@@ -47,12 +47,16 @@ private:
     eth_header *ethhdr;
     ip_header *iphdr;
     icmp_header *icmphdr;    
-    int pktsize, num, ECN, dscpList[21];
+    int pktsize, ECN, dscpList[21];
+    struct hostent *hostip;
+    in_addr in_addr_struct;
+    WSADATA wsaData;
 
     int makepacket();
     int ctoi(char *str_ip, ip_address *ipadr);
     void adrtopack(BYTE *bt, UINT cnt, eth_header *eth, bool sord);
     void testipandmac();
+    bool isIP(QString *host);
 
 };
 

@@ -25,7 +25,7 @@ public:
     bool abort, pause;
     
 signals:
-    void recPacket(long time, long jitter, bool timeout, int type, int code);
+    void recPacket(long time, long jitter, bool timeout, int type, int code, int len, char ttl, short sn);
     void endPing();
     
 public slots:
