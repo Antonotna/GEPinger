@@ -19,7 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
         dscpList[i+2] = (i*2+8)*ECN;
     }
     dscpList[19] = 48*ECN; dscpList[20] = 56*ECN;
-    QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int, int, char, short)),this, SLOT(rPacket(long, long, bool, int, int, int, char, short)));
+    srand(65535);
+    QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int, int, char, short, int)),this, SLOT(rPacket(long, long, bool, int, int, int, char, short, int)));
     QObject::connect(snd, SIGNAL(endPing()),this, SLOT(ePing()));
     QObject::connect(this, SIGNAL(ab()), snd, SLOT(abrt()));
 
@@ -91,6 +92,14 @@ int MainWindow::makepacket()
     if(hostip == NULL)
     {
         dwError = WSAGetLastError();
+        if (dwError == WSAHOST_NOT_FOUND)
+        {
+            wsaError.setText("Host not found");
+            wsaError.exec();
+        }else{
+            wsaError.setText("Unknown error");
+            wsaError.exec();
+        }
         return 1;
     }else{
         host = *(u_long *) hostip->h_addr_list[0];
@@ -188,7 +197,7 @@ int MainWindow::makepacket()
     else
         iphdr->ttl = 0x80;
 
-    iphdr->identification = (rand() % 65535);
+    iphdr->identification = (rand());
 
     /*temp*/
     if(ui->checkBox->isChecked())
@@ -204,8 +213,6 @@ int MainWindow::makepacket()
 
     icmphdr->sid = ui->sid->text().toInt();
     icmphdr->sn = ui->sn->text().toInt();
-
-    //icmphdr->sid = icmphdr->sn = 0x400;
 
     return 0;
 
@@ -281,7 +288,7 @@ void MainWindow::testipandmac()
     }
 }
 
-void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, int len, char ttl, short sn)
+void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, int len, char ttl, short sn, int tos)
 {
     QString tout = "timeout";
     QString tm = QString::number((u_int) len) + \
@@ -289,35 +296,33 @@ void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, i
             " ttl=" + QString::number((u_char) ttl) + \
             " time=" + QString::number((u_long) time) +
             "ms jitter=" + QString::number((u_long) jt) + \
-            " tos=" + QString::number((u_int) code);
+            " tos=" + QString::number((u_int) tos);
 
-    if(type == 3)
+    if(timeout)
     {
-        switch(code)
-        {       
-            case 1:
-                ui->Output->addItem("Host Unreachable");
-                break;
-            case 2:
-                ui->Output->addItem("Protocol Unreachable");
-                break;
-            case 3:
-                ui->Output->addItem("Port Unreachable");
-                break;
-            case 4:
-                ui->Output->addItem("Fragmentation Needed and Don't Fragment was Set");
-                break;
-            default:
-                ui->Output->addItem("Destination unreacheble");
-                break;
-        }
+        ui->Output->addItem(tout);
+        ui->Output->scrollToBottom();
         return;
     }
-    if(timeout)
-        ui->Output->addItem(tout);
-    else
+
+    if(type == 0 && code == 0)
+    {
+        getTos(tos);
+        tm.append(tosCode);
         ui->Output->addItem(tm);
-    ui->Output->scrollToBottom();    
+        ui->Output->scrollToBottom();
+        return;
+    }
+
+
+    getIcmpError(type,code);
+    ui->Output->addItem(err);
+
+    ui->Output->scrollToBottom();
+
+    return;
+
+
 }
 
 void MainWindow::ePing()
@@ -345,8 +350,7 @@ void MainWindow::pause_click()
 }
 
 void MainWindow::radio_chg(bool chg)
-{
-    //qWarning("%d",chg);
+{    
     ui->dscpBox->setEnabled(chg);
     ui->ipTos->setEnabled(!chg);
 
@@ -374,3 +378,126 @@ bool MainWindow::isIP(QString * host)
 
 }
 
+void MainWindow::getIcmpError(int type, int code)
+{
+    err.clear();
+    switch(type)
+    {
+        case 3:
+            switch(code)
+            {
+                case 1:
+                    err.append("Host Unreachable");
+                    break;
+                case 2:
+                    err.append("Protocol Unreachable");
+                    break;
+                case 3:
+                    err.append("Port Unreachable");
+                    break;
+                case 4:
+                    err.append("Fragmentation Needed and Don't Fragment was Set");
+                    break;
+                default:
+                    err.append("Destination unreacheble");
+                    break;
+            }
+            break;
+        case 11:
+            switch(code)
+            {
+                case 0:
+                    err.append("Time to live exceeded in transit");
+                    break;
+                case 1:
+                    err.append("Fragment reassembly time exceeded");
+                    break;
+                default:
+                    err.append("Time Exceeded Message");
+                    break;
+            }
+            break;
+        case 12:
+            err.append("Parameter Problem Message");
+            break;
+
+        case 4:
+            err.append("Source Quench Message");
+
+        default:
+            err.append("Unknown error. type="+QString::number(type)+" code="+QString::number(code));
+    }
+
+    return;
+}
+
+void MainWindow::getTos(int tos)
+{
+    tosCode.clear();
+    switch(tos)
+    {
+        case 32:
+            tosCode.append(" cs1");
+            break;
+        case 40:
+            tosCode.append(" af11");
+            break;
+        case 48:
+            tosCode.append(" af12");
+            break;
+        case 56:
+            tosCode.append(" af13");
+            break;
+        case 64:
+            tosCode.append(" cs2");
+            break;
+        case 72:
+            tosCode.append(" af21");
+            break;
+        case 80:
+            tosCode.append(" af22");
+            break;
+        case 88:
+            tosCode.append(" af23");
+            break;
+        case 96:
+            tosCode.append(" cs3");
+            break;
+        case 104:
+            tosCode.append(" af31");
+            break;
+        case 112:
+            tosCode.append(" af32");
+            break;
+        case 120:
+            tosCode.append(" af33");
+            break;
+        case 128:
+            tosCode.append(" cs4");
+            break;
+        case 136:
+            tosCode.append(" af41");
+            break;
+        case 144:
+            tosCode.append(" af42");
+            break;
+        case 152:
+            tosCode.append(" af43");
+            break;
+        case 160:
+            tosCode.append(" cs5");
+            break;
+        case 184:
+            tosCode.append(" ef");
+            break;
+        case 192:
+            tosCode.append(" cs6");
+            break;
+        case 224:
+            tosCode.append(" cs7");
+            break;
+        default:
+            tosCode.append(" ");
+
+    }
+}

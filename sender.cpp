@@ -12,6 +12,7 @@ void Sender::run()
     int res, loop;
     struct pcap_pkthdr *header;
     const u_char *pkt_data;
+    u_char *error_follow;
     long spkt, diff = 0, prvpkt=0, sspkt = 0, uspkt = 0;
     time_t send_time, rec_time;
 
@@ -30,6 +31,7 @@ void Sender::run()
         scnt = 1;
     }
     else loop = 1;
+
     for(i=0;i<scnt;i += loop)
     {
         if(pause)
@@ -42,16 +44,14 @@ void Sender::run()
         if(abort)
             break;
 
-        time(&send_time);
+        time(&send_time); //For timeout calculate
 
         pcap_sendpacket(fsend,(u_char *) snd_ethh,tlen);
-
-
 
         /*Reciving ourself request packet to get time of sending */
         while((res = pcap_next_ex(frecv, &header, &pkt_data)) >= 0){
             if(res == 0)
-                        /* Timeout elapsed */
+                        // Timeout elapsed
                         continue;
             rec_ethh = (eth_header *) pkt_data;
             rec_iph = (ip_header *) (pkt_data + sizeof(eth_header));
@@ -60,20 +60,20 @@ void Sender::run()
             {
                 spkt = (header->ts.tv_sec * 1000) + header->ts.tv_usec;
                 sspkt = header->ts.tv_sec;
-                uspkt = header->ts.tv_usec;                
-                //qWarning("rec pkt sec = %u, usec = %u   ", header->ts.tv_sec, header->ts.tv_usec);
+                uspkt = header->ts.tv_usec;
                 break;
             }
         }
 
 
-        /*Waiting for reply*/
-        while((res = pcap_next_ex(frecv, &header, &pkt_data)) >= 0){
 
+        /*Waiting for reply*/
+        while((res = pcap_next_ex(frecv, &header, &pkt_data)) >= 0)
+        {
             time(&rec_time);
             if((rec_time - send_time) > stmout)
             {
-                emit recPacket(0, 0, true, 0, 0, 0, 0, 0);
+                emit recPacket(0, 0, true, 0, 0, 0, 0, 0, 0);
                 prvpkt = 0;
                 break;
             }
@@ -81,29 +81,49 @@ void Sender::run()
             if(res == 0)
                         /* Timeout elapsed */
                         continue;
+
+
             rec_ethh = (eth_header *) pkt_data;
             rec_iph = (ip_header *) (pkt_data + sizeof(eth_header));
-            rec_icmp = (icmp_header *) (pkt_data + sizeof(eth_header) + sizeof(ip_header));            
-            if(rec_iph->proto == 0x1 && rec_icmp->type == 0 && rec_icmp->sid == snd_icmph->sid && rec_icmp->sn == snd_icmph->sn)
+            rec_icmp = (icmp_header *) (pkt_data + sizeof(eth_header) + sizeof(ip_header));
+
+            /*Skip all packet except our reply or icmp error*/
+            if(reverse_short(rec_ethh->type)==0x800 && \
+               rec_iph->proto == 0x1 && \
+               rec_icmp->type == 0x0 && \
+               rec_icmp->code == 0x0 && \
+               rec_icmp->sid == snd_icmph->sid && \
+               rec_icmp->sn == snd_icmph->sn)
             {
                 diff = ((header->ts.tv_sec - sspkt) * 1000) + ((header->ts.tv_usec - uspkt)/1000);
-                emit recPacket(diff, qFabs(diff - prvpkt), false, 0, rec_iph->tos, header->len, rec_iph->ttl, rec_icmp->sn);
+                emit recPacket(diff, qFabs(diff - prvpkt), false, rec_icmp->type, \
+                               rec_icmp->code, header->len, rec_iph->ttl, rec_icmp->sn,
+                               rec_iph->tos);
                 prvpkt = diff;
                 Sleep(sival);
                 break;
-            }            
-            //qWarning("!!!!!");
-            if(rec_iph->proto == 0x1 && rec_icmp->type == 0x3)
+
+            }
+            if(reverse_short(rec_ethh->type)==0x800 && \
+               rec_iph->proto == 0x1 && \
+               (rec_icmp->type == 0x3 || rec_icmp->type == 0xb || \
+                rec_icmp->type == 0xc || rec_icmp->type == 0x4 || rec_icmp->type == 0x5))
             {
-                qWarning("id = %i id = %i", (((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47), snd_iph->identification);
-                if(((((int) *(pkt_data + 46)) << 8) | (int) *(pkt_data + 47)) == reverse_short(snd_iph->identification))
+                error_follow = (u_char *) rec_icmp;
+                error_iph = (ip_header *) (error_follow + 8); //Go to sender ip header
+
+                if(error_iph->identification == snd_iph->identification)
                 {
-                    emit recPacket(diff, diff - prvpkt, false, 3, rec_icmp->code, 0, 0, 0);
-                    //qWarning("yes");
+                    diff = ((header->ts.tv_sec - sspkt) * 1000) + ((header->ts.tv_usec - uspkt)/1000);
+                    emit recPacket(diff, qFabs(diff - prvpkt), false, rec_icmp->type, \
+                                   rec_icmp->code, header->len, rec_iph->ttl, rec_icmp->sn,
+                                   rec_iph->tos);
+                    prvpkt = diff;
                     Sleep(sival);
                     break;
                 }
             }
+
         }
         snd_iph->identification = reverse_short(snd_iph->identification);
         snd_iph->identification += 1;
@@ -112,8 +132,7 @@ void Sender::run()
 
         /*CRC for ip and icmp header*/
         snd_iph->crc = snd_icmph->crc = 0;
-        snd_iph->crc = cksum(snd_iph, sizeof(ip_header));
-        //qWarning("crc = %x", snd_iph->crc);
+        snd_iph->crc = cksum(snd_iph, sizeof(ip_header));       
         snd_icmph->crc = icmp_cksum((u_short *) snd_icmph, tlen - (sizeof(eth_header) + sizeof(ip_header)));
 
 
@@ -150,34 +169,28 @@ void Sender::mystart(int cnt, u_char *packet, int len, int tmout, int ival, QWai
 
     if (pcap_findalldevs_ex(PCAP_SRC_IF_STRING, NULL /* auth is not needed */, &alldevs, errbuf) == -1)
     {
-        qWarning("Error in pcap_findalldevs_ex: %s\n", errbuf);
         return;
     }
     for(d=alldevs;d;d=d->next)
     {
         for(a = d->addresses;a;a=a->next)
         {
-            if(a->addr)
-                //qWarning("ip = %x and %x", ((struct sockaddr_in *)a->addr)->sin_addr.s_addr, *snd_saddr);
+            if(a->addr)              
                 if(((struct sockaddr_in *)a->addr)->sin_addr.s_addr == *snd_saddr)
-                {
-                    //qWarning("Description: %s", d->description);
+                {                  
                     if((fsend = pcap_open(d->name, 65536, 0, 1000, NULL, errbuf)) == NULL)
-                    {
-                        qWarning("!!return!!");
+                    {                       
                         return;
                     }
 
 
                     if((frecv = pcap_open(d->name, 65536, PCAP_OPENFLAG_NOCAPTURE_LOCAL, 1, NULL, errbuf)) == NULL)
-                    {
-                        qWarning("!!return!!");
+                    {                        
                         return;
                     }
 
                     if (pcap_compile(frecv, &fcode, "icmp", 1, 0) <0 )
-                    {
-                        qWarning("\nUnable to compile the packet filter. Check the syntax.\n");
+                    {                       
                         /* Free the device list */
                         pcap_freealldevs(alldevs);
                         return;
@@ -185,8 +198,7 @@ void Sender::mystart(int cnt, u_char *packet, int len, int tmout, int ival, QWai
 
                     //set the filter
                     if (pcap_setfilter(frecv, &fcode)<0)
-                    {
-                        qWarning("\nError setting the filter.\n");
+                    {                        
                         /* Free the device list */
                         pcap_freealldevs(alldevs);
                         return;
@@ -225,8 +237,6 @@ unsigned short Sender::cksum(ip_header *ip, int len){
 
   if(len)       /* take care of left over byte */
     sum += *(unsigned char *)tmp;
-
-  //qWarning("sum = %x", sum);
 
   while(sum>>16)
     sum = (sum & 0xFFFF) + (sum >> 16);

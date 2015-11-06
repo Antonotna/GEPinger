@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Thu 5. Nov 00:27:01 2015
+** Created: Sat 7. Nov 02:26:30 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -104,7 +104,7 @@ public:
         ipTtl->setGeometry(QRect(210, 20, 41, 20));
         checkBox = new QCheckBox(groupBox);
         checkBox->setObjectName(QString::fromUtf8("checkBox"));
-        checkBox->setGeometry(QRect(260, 20, 91, 21));
+        checkBox->setGeometry(QRect(260, 20, 61, 21));
         dscpBox = new QComboBox(groupBox);
         dscpBox->setObjectName(QString::fromUtf8("dscpBox"));
         dscpBox->setGeometry(QRect(100, 20, 71, 22));
@@ -202,7 +202,7 @@ public:
         groupBox->setTitle(QApplication::translate("MainWindow", "IP Header", 0, QApplication::UnicodeUTF8));
         label_2->setText(QApplication::translate("MainWindow", "TOS", 0, QApplication::UnicodeUTF8));
         label_8->setText(QApplication::translate("MainWindow", "TTL", 0, QApplication::UnicodeUTF8));
-        checkBox->setText(QApplication::translate("MainWindow", "Don't fragment", 0, QApplication::UnicodeUTF8));
+        checkBox->setText(QApplication::translate("MainWindow", "DF bit", 0, QApplication::UnicodeUTF8));
         dscpBox->clear();
         dscpBox->insertItems(0, QStringList()
          << QApplication::translate("MainWindow", "ef(46)", 0, QApplication::UnicodeUTF8)

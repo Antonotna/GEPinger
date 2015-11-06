@@ -8,6 +8,7 @@
 #include <winsock2.h>
 #include <IPHlpApi.h>
 #include <stdlib.h>
+#include <QMessageBox>
 #include "sender.h"
 #include "StructPacket.h"
 #include "mylistwidget.h"
@@ -33,7 +34,7 @@ public slots:
     void on_click();
     void pause_click();
     void radio_chg(bool chg);
-    void rPacket(long time, long jt, bool timeout, int type, int code, int len, char ttl, short sn);
+    void rPacket(long time, long jt, bool timeout, int type, int code, int len, char ttl, short sn, int tos);
     void ePing();
 
 signals:
@@ -51,12 +52,17 @@ private:
     struct hostent *hostip;
     in_addr in_addr_struct;
     WSADATA wsaData;
+    QString err, tosCode;
+    QMessageBox wsaError;
 
     int makepacket();
     int ctoi(char *str_ip, ip_address *ipadr);
     void adrtopack(BYTE *bt, UINT cnt, eth_header *eth, bool sord);
     void testipandmac();
     bool isIP(QString *host);
+    void getIcmpError(int type, int code);
+    void getTos(int tos);
+
 
 };
 
