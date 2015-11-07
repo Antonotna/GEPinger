@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Sat 7. Nov 02:26:30 2015
+** Created: Sat 7. Nov 16:09:55 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -62,6 +62,7 @@ public:
     QLabel *label_11;
     MyListWidget *Output;
     QPushButton *pause;
+    QLabel *ip;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -83,7 +84,7 @@ public:
         ipAddr->setGeometry(QRect(70, 20, 131, 20));
         label = new QLabel(centralWidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(20, 20, 51, 16));
+        label->setGeometry(QRect(20, 20, 44, 13));
         ping = new QPushButton(centralWidget);
         ping->setObjectName(QString::fromUtf8("ping"));
         ping->setGeometry(QRect(20, 530, 75, 23));
@@ -162,11 +163,14 @@ public:
         Output = new MyListWidget(centralWidget);
         Output->setObjectName(QString::fromUtf8("Output"));
         Output->setGeometry(QRect(430, 10, 391, 541));
-        Output->setSelectionMode(QAbstractItemView::MultiSelection);
+        Output->setSelectionMode(QAbstractItemView::ExtendedSelection);
         Output->setSelectionBehavior(QAbstractItemView::SelectItems);
         pause = new QPushButton(centralWidget);
         pause->setObjectName(QString::fromUtf8("pause"));
         pause->setGeometry(QRect(110, 530, 75, 23));
+        ip = new QLabel(centralWidget);
+        ip->setObjectName(QString::fromUtf8("ip"));
+        ip->setGeometry(QRect(220, 21, 151, 20));
         MainWindow->setCentralWidget(centralWidget);
         QWidget::setTabOrder(ipAddr, count);
         QWidget::setTabOrder(count, timeout);
@@ -244,6 +248,7 @@ public:
         label_7->setText(QApplication::translate("MainWindow", "ms", 0, QApplication::UnicodeUTF8));
         label_11->setText(QApplication::translate("MainWindow", "Datasize", 0, QApplication::UnicodeUTF8));
         pause->setText(QApplication::translate("MainWindow", "Pause ||", 0, QApplication::UnicodeUTF8));
+        ip->setText(QString());
     } // retranslateUi
 
 };

@@ -105,9 +105,7 @@ void Sender::run()
 
             }
             if(reverse_short(rec_ethh->type)==0x800 && \
-               rec_iph->proto == 0x1 && \
-               (rec_icmp->type == 0x3 || rec_icmp->type == 0xb || \
-                rec_icmp->type == 0xc || rec_icmp->type == 0x4 || rec_icmp->type == 0x5))
+               rec_iph->proto == 0x1)
             {
                 error_follow = (u_char *) rec_icmp;
                 error_iph = (ip_header *) (error_follow + 8); //Go to sender ip header

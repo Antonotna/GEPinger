@@ -52,8 +52,9 @@ private:
     struct hostent *hostip;
     in_addr in_addr_struct;
     WSADATA wsaData;
-    QString err, tosCode;
+    QString err, tosCode, delimiter;
     QMessageBox wsaError;
+    u_long jitter_sum, rtt_sum, pkt_num, pkt_loss;
 
     int makepacket();
     int ctoi(char *str_ip, ip_address *ipadr);

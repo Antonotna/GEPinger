@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->pause->setEnabled(false);
     ui->tos_dscp->setChecked(true);
     ui->Output->setUniformItemSizes(true);
+    delimiter = "-----------------------------------------------------------------------------";
     ECN = 4; //Explicit Congestion Notification
     dscpList[0]=46*ECN; dscpList[1] = 0;
     for(int i=0;i<=17;i++){
@@ -49,7 +50,11 @@ void MainWindow::on_click()
         ui->groupBox_3->setEnabled(false);
         ui->pause->setEnabled(true);
         ui->ping->setText("Stop");
+
+        jitter_sum = rtt_sum = pkt_num = pkt_loss = 0;
+
         snd->mystart(ct,pkt,pktsize,tmout,ival,&wait,&mutex);
+
     } else {
         if(snd->pause)
         {
@@ -100,12 +105,15 @@ int MainWindow::makepacket()
             wsaError.setText("Unknown error");
             wsaError.exec();
         }
+        ui->ip->clear();
         return 1;
     }else{
         host = *(u_long *) hostip->h_addr_list[0];
         in_addr_struct.S_un.S_addr = host;
         destination_ip  = inet_ntoa(in_addr_struct);
     }
+
+    ui->ip->setText(QString(destination_ip));
 
 
     pktsize = ui->datasize->value();
@@ -300,15 +308,19 @@ void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, i
 
     if(timeout)
     {
+        pkt_loss++;
         ui->Output->addItem(tout);
         ui->Output->scrollToBottom();
         return;
     }
 
     if(type == 0 && code == 0)
-    {
+    {        
         getTos(tos);
         tm.append(tosCode);
+        pkt_num++;
+        rtt_sum += (u_long) time;
+        jitter_sum += (u_long) jt;
         ui->Output->addItem(tm);
         ui->Output->scrollToBottom();
         return;
@@ -316,8 +328,8 @@ void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, i
 
 
     getIcmpError(type,code);
+    pkt_loss++;
     ui->Output->addItem(err);
-
     ui->Output->scrollToBottom();
 
     return;
@@ -326,22 +338,55 @@ void MainWindow::rPacket(long time, long jt, bool timeout, int type, int code, i
 }
 
 void MainWindow::ePing()
-{
+{        
+    QString mid_res;
+    u_long pkt_res;
+
+    if(pkt_num == 0)
+        pkt_res = 1;
+    else
+        pkt_res = pkt_num;
+
+    mid_res = "success=("+QString::number(pkt_num)+ "/" + QString::number(pkt_num+pkt_loss)+\
+            ") avg rtt=" + QString::number(rtt_sum/pkt_res) + \
+            "; avg jitter=" + QString::number(jitter_sum/pkt_res);
+
     free(pkt);
     ui->groupBox->setEnabled(true);
     ui->groupBox_2->setEnabled(true);
     ui->groupBox_3->setEnabled(true);
     ui->pause->setEnabled(false);
     ui->pause->setText("Pause ||");
-    ui->ping->setText("Ping");
+    ui->ping->setText("Ping");    
+    ui->Output->addItem(delimiter);
+    ui->Output->addItem(mid_res);
+    ui->Output->addItem(delimiter);
+    ui->Output->scrollToBottom();
+
 }
 
 void MainWindow::pause_click()
 {
+    QString mid_res;
+    u_long pkt_res;
+
+    if(pkt_num == 0)
+        pkt_res = 1;
+    else
+        pkt_res = pkt_num;
+
+    mid_res = "success=("+QString::number(pkt_num)+ "/" + QString::number(pkt_num+pkt_loss)+\
+            ") avg rtt=" + QString::number(rtt_sum/pkt_res) + \
+            "; avg jitter=" + QString::number(jitter_sum/pkt_res);
     if(ui->pause->text() == "Pause ||")
     {
         snd->pause = true;
         ui->pause->setText("Pause >");
+        ui->Output->addItem(delimiter);
+        ui->Output->addItem(mid_res);
+        ui->Output->addItem(delimiter);
+        ui->Output->scrollToBottom();
+
     } else {
         snd->pause = false;
         wait.wakeAll();
@@ -423,6 +468,28 @@ void MainWindow::getIcmpError(int type, int code)
 
         case 4:
             err.append("Source Quench Message");
+            break;
+
+        case 5:
+            switch(code)
+            {
+                case 0:
+                    err.append("Redirect datagrams for the Network");
+                    break;
+                case 1:
+                    err.append("Redirect datagrams for the Host");
+                    break;
+                case 2:
+                    err.append("Redirect datagrams for the Type of Service and Network");
+                    break;
+                case 3:
+                    err.append("Redirect datagrams for the Type of Service and Host");
+                    break;
+                default:
+                    err.append("Redirect Message");
+                    break;
+            }
+            break;
 
         default:
             err.append("Unknown error. type="+QString::number(type)+" code="+QString::number(code));

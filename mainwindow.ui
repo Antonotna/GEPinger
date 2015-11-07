@@ -49,8 +49,8 @@
      <rect>
       <x>20</x>
       <y>20</y>
-      <width>51</width>
-      <height>16</height>
+      <width>44</width>
+      <height>13</height>
      </rect>
     </property>
     <property name="text">
@@ -489,7 +489,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="selectionMode">
-     <enum>QAbstractItemView::MultiSelection</enum>
+     <enum>QAbstractItemView::ExtendedSelection</enum>
     </property>
     <property name="selectionBehavior">
      <enum>QAbstractItemView::SelectItems</enum>
@@ -506,6 +506,19 @@ p, li { white-space: pre-wrap; }
     </property>
     <property name="text">
      <string>Pause ||</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ip">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>21</y>
+      <width>151</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>
