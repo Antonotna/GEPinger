@@ -475,7 +475,7 @@ p, li { white-space: pre-wrap; }
       </rect>
      </property>
      <property name="text">
-      <string>Datasize</string>
+      <string>PktSize</string>
      </property>
     </widget>
    </widget>

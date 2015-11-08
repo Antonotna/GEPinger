@@ -341,13 +341,14 @@ void MainWindow::ePing()
 {        
     QString mid_res;
     u_long pkt_res;
+    float percent = ((float)pkt_num/((float)pkt_num+(float)pkt_loss))*100;
 
     if(pkt_num == 0)
         pkt_res = 1;
     else
         pkt_res = pkt_num;
 
-    mid_res = "success=("+QString::number(pkt_num)+ "/" + QString::number(pkt_num+pkt_loss)+\
+    mid_res = "success="+QString::number(percent)+"% ("+QString::number(pkt_num)+ "/" + QString::number(pkt_num+pkt_loss)+\
             ") avg rtt=" + QString::number(rtt_sum/pkt_res) + \
             "; avg jitter=" + QString::number(jitter_sum/pkt_res);
 
@@ -369,15 +370,17 @@ void MainWindow::pause_click()
 {
     QString mid_res;
     u_long pkt_res;
+    float percent = ((float)pkt_num/((float)pkt_num+(float)pkt_loss))*100;
 
     if(pkt_num == 0)
         pkt_res = 1;
     else
         pkt_res = pkt_num;
 
-    mid_res = "success=("+QString::number(pkt_num)+ "/" + QString::number(pkt_num+pkt_loss)+\
+    mid_res = "success="+QString::number(percent)+"% ("+QString::number(pkt_num)+ "/" + QString::number(pkt_num+pkt_loss)+\
             ") avg rtt=" + QString::number(rtt_sum/pkt_res) + \
             "; avg jitter=" + QString::number(jitter_sum/pkt_res);
+
     if(ui->pause->text() == "Pause ||")
     {
         snd->pause = true;

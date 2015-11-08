@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Sat 7. Nov 16:09:55 2015
+** Created: Sun 8. Nov 22:21:19 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -246,7 +246,7 @@ public:
         label_5->setText(QApplication::translate("MainWindow", "inter", 0, QApplication::UnicodeUTF8));
         inter->setText(QApplication::translate("MainWindow", "0", 0, QApplication::UnicodeUTF8));
         label_7->setText(QApplication::translate("MainWindow", "ms", 0, QApplication::UnicodeUTF8));
-        label_11->setText(QApplication::translate("MainWindow", "Datasize", 0, QApplication::UnicodeUTF8));
+        label_11->setText(QApplication::translate("MainWindow", "PktSize", 0, QApplication::UnicodeUTF8));
         pause->setText(QApplication::translate("MainWindow", "Pause ||", 0, QApplication::UnicodeUTF8));
         ip->setText(QString());
     } // retranslateUi

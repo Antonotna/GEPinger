@@ -4,7 +4,6 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
-#include <QTime>
 #include <qmath.h>
 #define HAVE_REMOTE
 #include <pcap.h>
@@ -42,8 +41,7 @@ private:
     ip_header *snd_iph, *rec_iph, *error_iph;
     icmp_header *snd_icmph, *rec_icmp;
     QMutex *snd_mutex;
-    QWaitCondition *snd_wait;
-    QTime rtt;
+    QWaitCondition *snd_wait;    
 
 };
 
