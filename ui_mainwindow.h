@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Mon 9. Nov 22:08:57 2015
+** Created: Mon 9. Nov 22:49:14 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -94,6 +94,7 @@ public:
         ipTos = new QLineEdit(groupBox);
         ipTos->setObjectName(QString::fromUtf8("ipTos"));
         ipTos->setGeometry(QRect(100, 50, 51, 20));
+        ipTos->setMaxLength(3);
         label_2 = new QLabel(groupBox);
         label_2->setObjectName(QString::fromUtf8("label_2"));
         label_2->setGeometry(QRect(10, 20, 31, 21));
@@ -103,6 +104,7 @@ public:
         ipTtl = new QLineEdit(groupBox);
         ipTtl->setObjectName(QString::fromUtf8("ipTtl"));
         ipTtl->setGeometry(QRect(210, 20, 41, 20));
+        ipTtl->setMaxLength(3);
         checkBox = new QCheckBox(groupBox);
         checkBox->setObjectName(QString::fromUtf8("checkBox"));
         checkBox->setGeometry(QRect(260, 20, 61, 21));
@@ -131,6 +133,7 @@ public:
         sn = new QLineEdit(groupBox_2);
         sn->setObjectName(QString::fromUtf8("sn"));
         sn->setGeometry(QRect(160, 20, 41, 20));
+        sn->setMaxLength(5);
         groupBox_3 = new QGroupBox(centralWidget);
         groupBox_3->setObjectName(QString::fromUtf8("groupBox_3"));
         groupBox_3->setGeometry(QRect(10, 50, 401, 101));
@@ -140,21 +143,24 @@ public:
         count = new QLineEdit(groupBox_3);
         count->setObjectName(QString::fromUtf8("count"));
         count->setGeometry(QRect(60, 20, 71, 20));
+        count->setMaxLength(10);
         label_4 = new QLabel(groupBox_3);
         label_4->setObjectName(QString::fromUtf8("label_4"));
         label_4->setGeometry(QRect(140, 20, 41, 21));
         timeout = new QLineEdit(groupBox_3);
         timeout->setObjectName(QString::fromUtf8("timeout"));
         timeout->setGeometry(QRect(190, 20, 41, 20));
+        timeout->setMaxLength(2);
         label_5 = new QLabel(groupBox_3);
         label_5->setObjectName(QString::fromUtf8("label_5"));
         label_5->setGeometry(QRect(250, 20, 21, 21));
         inter = new QLineEdit(groupBox_3);
         inter->setObjectName(QString::fromUtf8("inter"));
-        inter->setGeometry(QRect(280, 20, 31, 20));
+        inter->setGeometry(QRect(280, 20, 41, 20));
+        inter->setMaxLength(5);
         label_7 = new QLabel(groupBox_3);
         label_7->setObjectName(QString::fromUtf8("label_7"));
-        label_7->setGeometry(QRect(320, 20, 31, 21));
+        label_7->setGeometry(QRect(330, 20, 31, 21));
         datasize = new QSpinBox(groupBox_3);
         datasize->setObjectName(QString::fromUtf8("datasize"));
         datasize->setGeometry(QRect(60, 60, 71, 22));

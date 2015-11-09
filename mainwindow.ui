@@ -95,6 +95,9 @@ p, li { white-space: pre-wrap; }
        <height>20</height>
       </rect>
      </property>
+     <property name="maxLength">
+      <number>3</number>
+     </property>
     </widget>
     <widget class="QLabel" name="label_2">
      <property name="geometry">
@@ -130,6 +133,9 @@ p, li { white-space: pre-wrap; }
        <width>41</width>
        <height>20</height>
       </rect>
+     </property>
+     <property name="maxLength">
+      <number>3</number>
      </property>
     </widget>
     <widget class="QCheckBox" name="checkBox">
@@ -353,6 +359,9 @@ p, li { white-space: pre-wrap; }
      <property name="text">
       <string>1</string>
      </property>
+     <property name="maxLength">
+      <number>5</number>
+     </property>
     </widget>
    </widget>
    <widget class="QGroupBox" name="groupBox_3">
@@ -392,6 +401,9 @@ p, li { white-space: pre-wrap; }
      <property name="text">
       <string>10</string>
      </property>
+     <property name="maxLength">
+      <number>10</number>
+     </property>
     </widget>
     <widget class="QLabel" name="label_4">
      <property name="geometry">
@@ -418,6 +430,9 @@ p, li { white-space: pre-wrap; }
      <property name="text">
       <string>3</string>
      </property>
+     <property name="maxLength">
+      <number>2</number>
+     </property>
     </widget>
     <widget class="QLabel" name="label_5">
      <property name="geometry">
@@ -437,18 +452,21 @@ p, li { white-space: pre-wrap; }
       <rect>
        <x>280</x>
        <y>20</y>
-       <width>31</width>
+       <width>41</width>
        <height>20</height>
       </rect>
      </property>
      <property name="text">
       <string>0</string>
      </property>
+     <property name="maxLength">
+      <number>5</number>
+     </property>
     </widget>
     <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>320</x>
+       <x>330</x>
        <y>20</y>
        <width>31</width>
        <height>21</height>

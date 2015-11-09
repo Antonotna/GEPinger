@@ -9,6 +9,7 @@
 #include <IPHlpApi.h>
 #include <stdlib.h>
 #include <QMessageBox>
+#include <QTime>
 #include "sender.h"
 #include "StructPacket.h"
 #include "mylistwidget.h"
@@ -63,6 +64,7 @@ private:
     bool isIP(QString *host);
     void getIcmpError(int type, int code);
     void getTos(int tos);
+    int randomize(int max);
 
 
 };

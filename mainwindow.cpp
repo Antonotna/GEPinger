@@ -22,8 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
     dscpList[19] = 48*ECN; dscpList[20] = 56*ECN;
 
     /*rand use for id generate in ip header and for sid generate in icmp header */
-    srand(65535);
-    ui->sid->setText(QString::number(rand()));
+    ui->sid->setText(QString::number(randomize(65535)));
+
 
     QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int, int, char, short, int)),this, SLOT(rPacket(long, long, bool, int, int, int, char, short, int)));
     QObject::connect(snd, SIGNAL(endPing()),this, SLOT(ePing()));
@@ -82,7 +82,7 @@ int MainWindow::makepacket()
     u_long host;
     char *destination_ip;    
     QByteArray asc;
-    u_long best_route, sadr;
+    u_long best_route;
     ULONG mac[2], size = 6;
     BYTE *pbyte;    
 
@@ -210,7 +210,7 @@ int MainWindow::makepacket()
     else
         iphdr->ttl = 0x80;
 
-    iphdr->identification = (rand());
+    iphdr->identification = (randomize(65535));
 
     /*temp*/
     if(ui->checkBox->isChecked())
@@ -575,4 +575,10 @@ void MainWindow::getTos(int tos)
             tosCode.append(" ");
 
     }
+}
+
+int MainWindow::randomize(int max)
+{
+    qsrand(QTime::currentTime().msec());
+    return (rand() % max);
 }
