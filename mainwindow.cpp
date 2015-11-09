@@ -20,7 +20,11 @@ MainWindow::MainWindow(QWidget *parent) :
         dscpList[i+2] = (i*2+8)*ECN;
     }
     dscpList[19] = 48*ECN; dscpList[20] = 56*ECN;
+
+    /*rand use for id generate in ip header and for sid generate in icmp header */
     srand(65535);
+    ui->sid->setText(QString::number(rand()));
+
     QObject::connect(snd,SIGNAL(recPacket(long, long, bool, int, int, int, char, short, int)),this, SLOT(rPacket(long, long, bool, int, int, int, char, short, int)));
     QObject::connect(snd, SIGNAL(endPing()),this, SLOT(ePing()));
     QObject::connect(this, SIGNAL(ab()), snd, SLOT(abrt()));
@@ -133,8 +137,14 @@ int MainWindow::makepacket()
 
 
     /*Getting ip of best route*/
-    GetBestRoute(host, 0, &pMib);
-    best_route = (u_long) pMib.dwForwardNextHop;
+    if(GetBestRoute(host, 0, &pMib))
+        return 1;
+
+    /*For local host dwForwardType = 3; for remote host dwForwardType = 4*/
+    if(pMib.dwForwardType == 3)
+        best_route = host;
+    else
+        best_route = (u_long) pMib.dwForwardNextHop;
 
 
     /*Source ip and source mac building*/
@@ -156,7 +166,7 @@ int MainWindow::makepacket()
             {               
                 if(ctoi(pAdapterInfo->IpAddressList.IpAddress.String,&(iphdr->saddr)) != 0)
                     return 1;                
-                adrtopack(pAdapterInfo->Address,pAdapterInfo->AddressLength,ethhdr, true);
+                adrtopack(pAdapterInfo->Address,pAdapterInfo->AddressLength, ethhdr, true);
                 break;
 
             }
@@ -166,11 +176,6 @@ int MainWindow::makepacket()
 
     if(pAdapterInfo == NULL)
         return 1;
-
-    /*If pinged and pinging hosts belong same network best route ip address == ip_src address*/
-    sadr = inet_addr(pAdapterInfo->IpAddressList.IpAddress.String);
-    if(best_route == sadr)
-        best_route = host;
 
 
     /*Destination mac building*/

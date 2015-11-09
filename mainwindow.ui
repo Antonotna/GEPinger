@@ -324,6 +324,9 @@ p, li { white-space: pre-wrap; }
      <property name="text">
       <string>1234</string>
      </property>
+     <property name="maxLength">
+      <number>5</number>
+     </property>
     </widget>
     <widget class="QLabel" name="label_10">
      <property name="geometry">

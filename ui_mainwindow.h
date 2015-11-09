@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Sun 8. Nov 22:21:19 2015
+** Created: Mon 9. Nov 22:08:57 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -124,6 +124,7 @@ public:
         sid = new QLineEdit(groupBox_2);
         sid->setObjectName(QString::fromUtf8("sid"));
         sid->setGeometry(QRect(40, 20, 61, 20));
+        sid->setMaxLength(5);
         label_10 = new QLabel(groupBox_2);
         label_10->setObjectName(QString::fromUtf8("label_10"));
         label_10->setGeometry(QRect(110, 20, 46, 21));
