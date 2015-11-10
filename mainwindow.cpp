@@ -179,7 +179,8 @@ int MainWindow::makepacket()
 
 
     /*Destination mac building*/
-    SendARP(best_route,NULL,mac,&size);
+    if(SendARP(best_route,NULL,mac,&size))
+        return 1;
     pbyte = (BYTE *) mac;
     adrtopack(pbyte, 6, ethhdr, false);
 
